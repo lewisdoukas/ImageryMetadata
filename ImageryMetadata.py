@@ -102,9 +102,7 @@ def export_shp(filename, exportDir, prefDate):
 
         finalGeoDf['SRC_DATE'] = finalGeoDf['SRC_DATE'].dropna().astype(int)
         prefGeoDf = finalGeoDf[(finalGeoDf['SRC_DATE'] > prefDate) & ((finalGeoDf['NICE_NAME'].str.lower() == "metro") | ("vivid" in finalGeoDf['NICE_NAME'].str.lower()))]
-        
-        try: prefGeoDf.to_file(exportFnamePrefshp)
-        except: pass
+        if prefGeoDf: prefGeoDf.to_file(exportFnamePrefshp)
 
         detailsDf = pd.DataFrame([prefGeoDf['OBJECTID'], prefGeoDf['SRC_DATE'], prefGeoDf['SRC_RES'], prefGeoDf['MinMapLevel'], prefGeoDf['MaxMapLevel'], prefGeoDf['NICE_NAME']])
         detailsDfT = detailsDf.T
