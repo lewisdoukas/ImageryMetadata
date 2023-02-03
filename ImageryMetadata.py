@@ -9,14 +9,22 @@ warnings.simplefilter(action="ignore", category= UserWarning)
 
 banner = \
 '''
- ___ __ __              ______               __                
-|   |  |__.---.-.-----.|   _  \ .-----.--.--|  |--.---.-.-----.
-|.  |  |  |  _  |__ --||.  |   \|  _  |  |  |    <|  _  |__ --|
-|.  |__|__|___._|_____||.  |    |_____|_____|__|__|___._|_____|
-|:  |                  |:  1    /                              
-|::.|                  |::.. . /                               
-`---'                  `------'  
-
+/\__  _\                                                         
+\/_/\ \/     ___ ___      __       __      __   _ __   __  __    
+   \ \ \   /' __` __`\  /'__`\   /'_ `\  /'__`\/\`'__\/\ \/\ \   
+    \_\ \__/\ \/\ \/\ \/\ \L\.\_/\ \L\ \/\  __/\ \ \/ \ \ \_\ \  
+    /\_____\ \_\ \_\ \_\ \__/.\_\ \____ \ \____\\ \_\  \/`____ \ 
+    \/_____/\/_/\/_/\/_/\/__/\/_/\/___L\ \/____/ \/_/   `/___/> \
+                                   /\____/                 /\___/
+                                   \_/__/                  \/__/ 
+                 __                __            __               
+ /'\_/`\        /\ \__            /\ \          /\ \__            
+/\      \     __\ \ ,_\    __     \_\ \     __  \ \ ,_\    __     
+\ \ \__\ \  /'__`\ \ \/  /'__`\   /'_` \  /'__`\ \ \ \/  /'__`\   
+ \ \ \_/\ \/\  __/\ \ \_/\ \L\.\_/\ \L\ \/\ \L\.\_\ \ \_/\ \L\.\_ 
+  \ \_\\ \_\ \____\\ \__\ \__/.\_\ \___,_\ \__/.\_\\ \__\ \__/.\_\
+   \/_/ \/_/\/____/ \/__/\/__/\/_/\/__,_ /\/__/\/_/ \/__/\/__/\/_/
+                                                   by Ilias Doukas
 '''
 
 
@@ -34,7 +42,12 @@ def get_metadata(polyDf, geoDfList, exportDir, bar):
         Xmax = polyDf['Xmax']
         Ymax = polyDf['Ymax']
 
-        url = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/4/query?where=&text=&objectIds=&time=&geometry="+str(Xmin)+","+str(Ymin)+","+str(Xmax)+","+str(Ymax)+"&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=4326&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentsOnly=false&datumTransformation=&parameterValues=&rangeValues=&f=geojson"
+        url = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/4/ \
+            query?where=&text=&objectIds=&time=&geometry="+str(Xmin)+","+str(Ymin)+","+str(Xmax)+","+str(Ymax)+ \
+            "&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true& \
+            returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=4326&returnIdsOnly=false&returnCountOnly=false&orderByFields=& \
+            groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=& \
+            queryByDistance=&returnExtentsOnly=false&datumTransformation=&parameterValues=&rangeValues=&f=geojson"
 
         req = requests.get(url).json()
         if "features" in req:
@@ -88,8 +101,10 @@ def export_shp(filename, exportDir, prefDate):
         finalGeoDf.to_file(exportFname)
 
         finalGeoDf['SRC_DATE'] = finalGeoDf['SRC_DATE'].dropna().astype(int)
-        prefGeoDf = finalGeoDf[(finalGeoDf['SRC_DATE'] > prefDate) & ((finalGeoDf['NICE_NAME'].str.lower() == "metro") | (finalGeoDf['NICE_NAME'].str.lower() == "vivid"))]
-        prefGeoDf.to_file(exportFnamePrefshp)
+        prefGeoDf = finalGeoDf[(finalGeoDf['SRC_DATE'] > prefDate) & ((finalGeoDf['NICE_NAME'].str.lower() == "metro") | ("vivid" in finalGeoDf['NICE_NAME'].str.lower()))]
+        
+        try: prefGeoDf.to_file(exportFnamePrefshp)
+        except: pass
 
         detailsDf = pd.DataFrame([prefGeoDf['OBJECTID'], prefGeoDf['SRC_DATE'], prefGeoDf['SRC_RES'], prefGeoDf['MinMapLevel'], prefGeoDf['MaxMapLevel'], prefGeoDf['NICE_NAME']])
         detailsDfT = detailsDf.T
