@@ -8,7 +8,8 @@ warnings.simplefilter(action="ignore", category= UserWarning)
 
 
 banner = \
-'''
+"""
+
 /\__  _\                                                         
 \/_/\ \/     ___ ___      __       __      __   _ __   __  __    
    \ \ \   /' __` __`\  /'__`\   /'_ `\  /'__`\/\`'__\/\ \/\ \   
@@ -17,6 +18,7 @@ banner = \
     \/_____/\/_/\/_/\/_/\/__/\/_/\/___L\ \/____/ \/_/   `/___/> \
                                    /\____/                 /\___/
                                    \_/__/                  \/__/ 
+
                  __                __            __               
  /'\_/`\        /\ \__            /\ \          /\ \__            
 /\      \     __\ \ ,_\    __     \_\ \     __  \ \ ,_\    __     
@@ -24,8 +26,10 @@ banner = \
  \ \ \_/\ \/\  __/\ \ \_/\ \L\.\_/\ \L\ \/\ \L\.\_\ \ \_/\ \L\.\_ 
   \ \_\\ \_\ \____\\ \__\ \__/.\_\ \___,_\ \__/.\_\\ \__\ \__/.\_\
    \/_/ \/_/\/____/ \/__/\/__/\/_/\/__,_ /\/__/\/_/ \/__/\/__/\/_/
+                                                   
                                                    by Ilias Doukas
-'''
+
+"""
 
 
 '''
@@ -42,14 +46,10 @@ def get_metadata(polyDf, geoDfList, exportDir, bar):
         Xmax = polyDf['Xmax']
         Ymax = polyDf['Ymax']
 
-        url = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/4/ \
-            query?where=&text=&objectIds=&time=&geometry="+str(Xmin)+","+str(Ymin)+","+str(Xmax)+","+str(Ymax)+ \
-            "&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true& \
-            returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=4326&returnIdsOnly=false&returnCountOnly=false&orderByFields=& \
-            groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=& \
-            queryByDistance=&returnExtentsOnly=false&datumTransformation=&parameterValues=&rangeValues=&f=geojson"
+        url = "https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/4/query?where=&text=&objectIds=&time=&geometry="+str(Xmin)+","+str(Ymin)+","+str(Xmax)+","+str(Ymax)+"&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&relationParam=&outFields=*&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=4326&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&returnDistinctValues=false&resultOffset=&resultRecordCount=&queryByDistance=&returnExtentsOnly=false&datumTransformation=&parameterValues=&rangeValues=&f=geojson"
 
         req = requests.get(url).json()
+
         if "features" in req:
             features = req['features']
 
@@ -78,8 +78,8 @@ def get_metadata(polyDf, geoDfList, exportDir, bar):
 def export_shp(filename, exportDir, prefDate):
     try:
         now = datetime.datetime.now().strftime("%H-%M-%S_%d-%m-%Y")
-        exportFname = f"{exportDir}/metadata_{now}.shp"
-        exportFnamePrefshp = f"{exportDir}/prefMetadata_{now}.shp"
+        exportFname = f"{exportDir}/{now}_metadata.shp"
+        exportFnamePrefshp = f"{exportDir}/{now}_prefMetadata.shp"
         exportFnameCsv = f"{exportDir}/polyDetails.csv"
         geoDfs = []
 
@@ -101,8 +101,15 @@ def export_shp(filename, exportDir, prefDate):
         finalGeoDf.to_file(exportFname)
 
         finalGeoDf['SRC_DATE'] = finalGeoDf['SRC_DATE'].dropna().astype(int)
-        prefGeoDf = finalGeoDf[(finalGeoDf['SRC_DATE'] > prefDate) & ((finalGeoDf['NICE_NAME'].str.lower() == "metro") | ("vivid" in finalGeoDf['NICE_NAME'].str.lower()))]
-        if prefGeoDf: prefGeoDf.to_file(exportFnamePrefshp)
+        prefGeoDf = finalGeoDf[(finalGeoDf['SRC_DATE'] > prefDate) & ((finalGeoDf['NICE_NAME'].str.lower() == "metro") | ((finalGeoDf['NICE_NAME'].str.lower()).str.contains("vivid")))]
+
+        if not prefGeoDf.empty: 
+            prefGeoDf.to_file(exportFnamePrefshp)
+        else:
+            now = datetime.datetime.now().strftime("%H:%M:%S %d-%m-%Y")
+            with open(f"{exportDir}/errors.log", "a", encoding="utf-8") as file:
+                file.write(f"✕ {now}: Pref geodataframe is empty!")
+
 
         detailsDf = pd.DataFrame([prefGeoDf['OBJECTID'], prefGeoDf['SRC_DATE'], prefGeoDf['SRC_RES'], prefGeoDf['MinMapLevel'], prefGeoDf['MaxMapLevel'], prefGeoDf['NICE_NAME']])
         detailsDfT = detailsDf.T
@@ -146,7 +153,7 @@ def create_export_dir():
     elif __file__:
         currentDirName = os.path.dirname(__file__).replace('\\', '/')
 
-    dir = f"{currentDirName}/Metadata_{now}"
+    dir = f"{currentDirName}/{now}_Metadata"
 
     dirExists = os.path.isdir(dir)
     if not dirExists:
