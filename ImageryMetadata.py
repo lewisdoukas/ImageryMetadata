@@ -9,25 +9,21 @@ warnings.simplefilter(action="ignore", category= UserWarning)
 
 banner = \
 """
-
-/\__  _\                                                         
-\/_/\ \/     ___ ___      __       __      __   _ __   __  __    
-   \ \ \   /' __` __`\  /'__`\   /'_ `\  /'__`\/\`'__\/\ \/\ \   
-    \_\ \__/\ \/\ \/\ \/\ \L\.\_/\ \L\ \/\  __/\ \ \/ \ \ \_\ \  
-    /\_____\ \_\ \_\ \_\ \__/.\_\ \____ \ \____\\ \_\  \/`____ \ 
-    \/_____/\/_/\/_/\/_/\/__/\/_/\/___L\ \/____/ \/_/   `/___/> \
-                                   /\____/                 /\___/
-                                   \_/__/                  \/__/ 
-
-                 __                __            __               
- /'\_/`\        /\ \__            /\ \          /\ \__            
-/\      \     __\ \ ,_\    __     \_\ \     __  \ \ ,_\    __     
-\ \ \__\ \  /'__`\ \ \/  /'__`\   /'_` \  /'__`\ \ \ \/  /'__`\   
- \ \ \_/\ \/\  __/\ \ \_/\ \L\.\_/\ \L\ \/\ \L\.\_\ \ \_/\ \L\.\_ 
-  \ \_\\ \_\ \____\\ \__\ \__/.\_\ \___,_\ \__/.\_\\ \__\ \__/.\_\
-   \/_/ \/_/\/____/ \/__/\/__/\/_/\/__,_ /\/__/\/_/ \/__/\/__/\/_/
-                                                   
-                                                   by Ilias Doukas
+ _____                                      
+|_   _|                                     
+  | | _ __ ___   __ _  __ _  ___ _ __ _   _ 
+  | || '_ ` _ \ / _` |/ _` |/ _ \ '__| | | |
+ _| || | | | | | (_| | (_| |  __/ |  | |_| |
+ \___/_| |_| |_|\__,_|\__, |\___|_|   \__, |
+                       __/ |           __/ |
+                      |___/           |___/ 
+___  ___     _            _       _        
+|  \/  |    | |          | |     | |       
+| .  . | ___| |_ __ _  __| | __ _| |_ __ _ 
+| |\/| |/ _ \ __/ _` |/ _` |/ _` | __/ _` |
+| |  | |  __/ || (_| | (_| | (_| | || (_| |
+\_|  |_/\___|\__\__,_|\__,_|\__,_|\__\__,_|
+                            by Ilias Doukas
 
 """
 
@@ -97,7 +93,8 @@ def export_shp(filename, exportDir, prefDate):
         polyDf.apply(get_metadata, axis= 1, args= [geoDfs, exportDir, bar])
         bar.finish()
         
-        finalGeoDf = gpd.GeoDataFrame(pd.concat(geoDfs, ignore_index=True), crs= "EPSG:4326").drop_duplicates()
+        finalGeoDf = gpd.GeoDataFrame(pd.concat(geoDfs, ignore_index=True)).drop_duplicates()
+        finalGeoDf = finalGeoDf.set_crs("EPSG:4326", allow_override=True)
         finalGeoDf.to_file(exportFname)
 
         finalGeoDf['SRC_DATE'] = finalGeoDf['SRC_DATE'].dropna().astype(int)
@@ -146,7 +143,7 @@ def make_datetime(date):
 ------------------------------------------------------------------------------
 '''
 def create_export_dir():
-    now = datetime.datetime.now().strftime("%d-%b-%Y_%H-%M-%S")
+    now = datetime.datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
 
     if getattr(sys, "frozen", False):
         currentDirName = os.path.dirname(sys.executable).replace('\\', '/')
